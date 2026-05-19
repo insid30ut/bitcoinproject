@@ -27,6 +27,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('authToken');
+      if (token) {
+        window.location.href = `/api/auth/handcash/callback?authToken=${token}`;
+        return;
+      }
+    }
+
     const fetchUser = async () => {
       try {
         const res = await fetch('/api/auth/user');
@@ -35,9 +44,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           if (data.user) {
             setWalletType('handcash');
             setUserProfile({
-              handle: data.user.handle,
-              paymail: data.user.paymail,
-              avatarUrl: data.user.avatarUrl,
+              handle: data.user.publicProfile?.handle || data.user.handle,
+              paymail: data.user.publicProfile?.paymail || data.user.paymail,
+              avatarUrl: data.user.publicProfile?.avatarUrl || data.user.avatarUrl,
             });
             setIsLoading(false);
             return;
@@ -72,7 +81,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const connectHandcash = () => {
-    window.location.href = '/api/auth/handcash/login';
+    window.location.href = `/api/auth/handcash/login?returnTo=${encodeURIComponent(window.location.pathname)}`;
   };
 
   const connectYours = async () => {

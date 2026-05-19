@@ -22,9 +22,8 @@ export function usePayment() {
     // 1. Calculate the raw USD splits
     const payments = recipients.map(r => ({
       destination: r.destination,
-      amount: Number(((totalUsdAmount * r.percentage) / 100).toFixed(4)),
-      currencyCode: 'USD',
-    })).filter(p => p.amount > 0);
+      sendAmount: Number(((totalUsdAmount * r.percentage) / 100).toFixed(4)),
+    })).filter(p => p.sendAmount > 0);
 
     if (walletType === 'handcash') {
       // Send to our backend Handcash Pay API

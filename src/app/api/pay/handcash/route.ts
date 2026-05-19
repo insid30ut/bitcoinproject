@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { handCashConnect } from '@/lib/handcash';
+import { handCashConfig, Connect } from '@/lib/handcash';
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
@@ -13,16 +13,19 @@ export async function POST(request: Request) {
   try {
     const { payments, description } = await request.json();
     
-    // Create account instance using user's token
-    const account = handCashConnect.getAccountFromAuthToken(authToken);
+    const client = handCashConfig.getAccountClient(authToken) as any;
 
-    // Execute the payment
-    const paymentResult = await account.wallet.pay({
-      payments,
-      description: description || 'Forum Payment',
+    const { data: paymentResult } = await Connect.pay({
+      client,
+      body: {
+        instrumentCurrencyCode: 'BSV',
+        denominationCurrencyCode: 'USD',
+        receivers: payments,
+        note: description || 'Forum Payment',
+      }
     });
 
-    return NextResponse.json({ success: true, transactionId: paymentResult.transactionId }, { status: 200 });
+    return NextResponse.json({ success: true, transactionId: paymentResult?.transactionId }, { status: 200 });
   } catch (error: any) {
     console.error('Handcash payment error:', error);
     return NextResponse.json({ error: error.message || 'Payment failed' }, { status: 500 });

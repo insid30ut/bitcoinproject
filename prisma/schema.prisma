@@ -1,13 +1,81 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider   = "prisma-client"
+  output     = "../src/generated/prisma"
+  engineType = "client"
 }
 
 datasource db {
   provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  paymail   String   @unique
+  handle    String
+  wallet    String   // "handcash" or "yours"
+  createdAt DateTime @default(now())
+
+  forums    Forum[]
+  posts     Post[]
+  comments  Comment[]
+  votes     Vote[]
+}
+
+model Forum {
+  id              String   @id @default(cuid())
+  name            String
+  description     String
+  creatorPaymail  String
+  creator         User     @relation(fields: [creatorPaymail], references: [paymail])
+  creationFeeTxId String?
+  createdAt       DateTime @default(now())
+
+  posts           Post[]
+}
+
+model Post {
+  id            String   @id @default(cuid())
+  title         String
+  content       String
+  authorPaymail String
+  author        User     @relation(fields: [authorPaymail], references: [paymail])
+  forumId       String
+  forum         Forum    @relation(fields: [forumId], references: [id])
+  postFeeTxId   String?
+  createdAt     DateTime @default(now())
+
+  comments      Comment[]
+  votes         Vote[]
+}
+
+model Comment {
+  id              String   @id @default(cuid())
+  content         String
+  authorPaymail   String
+  author          User     @relation(fields: [authorPaymail], references: [paymail])
+  postId          String
+  post            Post     @relation(fields: [postId], references: [id])
+  parentCommentId String?
+  parentComment   Comment? @relation("CommentToComment", fields: [parentCommentId], references: [id])
+  replies         Comment[] @relation("CommentToComment")
+  commentFeeTxId  String?
+  createdAt       DateTime @default(now())
+
+  votes           Vote[]
+}
+
+model Vote {
+  id          String   @id @default(cuid())
+  amountUsd   Float
+  txId        String
+  type        String   // "upvalue" or "downvalue"
+  voterPaymail String
+  voter       User     @relation(fields: [voterPaymail], references: [paymail])
+  
+  postId      String?
+  post        Post?    @relation(fields: [postId], references: [id])
+  commentId   String?
+  comment     Comment? @relation(fields: [commentId], references: [id])
+
+  createdAt   DateTime @default(now())
 }
