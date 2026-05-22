@@ -12,8 +12,10 @@ export async function GET(request: Request) {
   const cookieStore = await cookies();
   const returnTo = cookieStore.get('handcash_return_to')?.value || '/';
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://scammerscartel.xyz';
+  
   // Set the authToken in an HttpOnly cookie
-  const response = NextResponse.redirect(new URL(returnTo, request.url));
+  const response = NextResponse.redirect(new URL(returnTo, baseUrl));
   
   response.cookies.set({
     name: 'handcash_auth_token',
